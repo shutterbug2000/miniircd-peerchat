@@ -35,6 +35,8 @@ from optparse import OptionParser
 
 VERSION = "1.2.1"
 
+CKEY_DICT={}
+CKEY_wld=""
 
 PY3 = sys.version_info[0] >= 3
 
@@ -58,6 +60,9 @@ def create_directory(path):
 
 
 class Channel(object):
+    #CHANKEY_lobby=":\\Dw8PDw8PDw8ABwAAAAAAAAAAAAAwEAAQYAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAHAAAAAAAAAAAAAAAAAAAACwAAAAAAAAAMAAMAAAAAAAgAAAAAAAAECAADAAAAAAACAAAAAAAABAgAAwAAAAAACQAAAAAAAAQADAAAAAADAAAAAAAABAAMAAAAAAoAAAAAAAAEAAwAAAAADAAAAAAAAAADAAAAAAAEAAAAAAAAAAMAAAAAAAkAAAAAAAAAAwAAAAAADQAAAAAAAAADAAAAAAAPAAAAAAAACAAMAAAAAAUAAAAAAAAMAAwAAAAADgAAAAAAAAwADAAAAAEAAAAAAAAAAwMABAAAAAABAgAAAAAAAAMIAAQAAAAAAAYAAAAAAAADCAAEAAAAAAANAAAAAAAAAwgABAAAAAABAQAAAAAAAAcEAAQAAAAAAAsAAAAAAAABAAAAAAEDAAAAAAAA"
+    CHANKEY_lobby=":\\"
+    CHANKEY_time=" :\\IRloIQAAAAA*"
     def __init__(self, server, name):
         self.server = server
         self.name = name
@@ -121,6 +126,9 @@ class Channel(object):
 
 
 class Client(object):
+    #CKEY_DICT={}
+    #CKEY_time=" :\\IRloIQAAAAA*"
+    #CKEY_lobby=" :\\sAQAAJ7EcKcAAAAAAxAWAAAAAAABAAAAAAAAAAcAAAAAAAAACwAAAAwDAAAIAAAASAMAAAIAAABIAwAACQAAAIQDAAADAAAAhAMAAAoAAACEAwAADAAAAMADAAAEAAAAwAMAAAkAAADAAwAADQAAAMADAAAPAAAA-AMAAAUAAAD8AwAADgAAAPwDAAAQAAAAMwQAABIAAAA4BAAABgAAADgEAAANAAAAOAQAABEAAAB0BAAACwAAALAEAAATAAAA"
     __linesep_regexp = re.compile(r"\r?\n")
     # The RFC limit for nicknames is 9 characters, but what the heck.
     __valid_nickname_regexp = re.compile(
@@ -159,7 +167,7 @@ class Client(object):
             return
         if not self.__sent_ping and self.__timestamp + 90 < now:
             if self.__handle_command == self.__command_handler:
-                # Registered.
+               # Registered.
                 self.message("PING :%s" % self.server.name)
                 self.__sent_ping = True
             else:
@@ -269,6 +277,7 @@ class Client(object):
                 channel.add_member(self)
                 self.channels[irc_lower(channelname)] = channel
                 self.message_channel(channel, "JOIN", channelname, True)
+                #self.message(":SERVER!SERVER@* NOTICE :" + self.nickname + " has joined "+channel.name)
                 self.channel_log(channel, "joined", meta=True)
                 if channel.topic:
                     self.reply("332 %s %s :%s"
@@ -318,16 +327,17 @@ class Client(object):
                     server.remove_member_from_channel(self, channelname)
                 self.channels = {}
                 return
+            #self.message(":SERVER!SERVER@* NOTICE :" + self.nickname + " has joined "+arguments[0])
             self.__send_names(arguments, for_join=True)
 
         def list_handler():
-            if len(arguments) < 1:
-                channels = server.channels.values()
-            else:
-                channels = []
-                for channelname in arguments[0].split(","):
-                    if server.has_channel(channelname):
-                        channels.append(server.get_channel(channelname))
+            #if len(arguments) < 1:
+            channels = server.channels.values()
+            #else:
+            #    channels = []
+            #    for channelname in arguments[0].split(","):
+            #        if server.has_channel(channelname):
+            #            channels.append(server.get_channel(channelname))
 
             sorted_channels = sorted(channels, key=lambda x: x.name)
             for channel in sorted_channels:
@@ -384,8 +394,10 @@ class Client(object):
                         self.reply("442 %s :You're not on that channel"
                                    % targetname)
                 else:
-                    self.reply("472 %s %s :Unknown MODE flag"
-                               % (self.nickname, flag))
+                    print("lolnope")
+                    self.reply("MODE "+arguments[0]+" "+arguments[1]+" "+arguments[2])
+                    #self.reply("472 %s %s :Unknown MODE flag"
+                    #           % (self.nickname, flag))
             elif targetname == self.nickname:
                 if len(arguments) == 1:
                     self.reply("221 %s +" % self.nickname)
@@ -558,7 +570,140 @@ class Client(object):
                 self.reply("401 %s %s :No such nick"
                            % (self.nickname, username))
 
+        def setchankey_handler():
+            global CKEY_DICT
+            global CKEY_wld
+            channel = self.channels[irc_lower(arguments[0])]
+            if(arguments[1][:13]=="\\b_lib_c_time"):
+                self.channels[irc_lower(arguments[0])].CHANKEY_time=" :"+arguments[1][13:]
+            if(arguments[1][:14]=="\\b_lib_c_lobby"):
+                self.channels[irc_lower(arguments[0])].CHANKEY_lobby=" :"+arguments[1][14:]
+            if(arguments[1][:13]=="\\b_lby_wlddata"):
+                CKEY_wld=" :\\"+arguments[1][13:]
+            #if(arguments[2][:13]=="\\b_lib_u_user"):
+            #    CKEY_DICT[self.nickname+"user"]=" :\\"+arguments[2][14:]
+            #if(arguments[2][:15]=="\\b_lib_u_system"):
+            #    CKEY_DICT[self.nickname+"system"]=" :\\"+arguments[2][16:]
+                #print(CKEY_DICT[self.nickname]["user"])
+
+            #self.reply("MODE " + arguments[0] + " +o " + arguments[0])
+            for i in range(0,len(list(channel.members))):
+                print(list(channel.members)[i].nickname)
+                list(channel.members)[i].reply("704 "+ arguments[0]+" "+arguments[0]+" "+" BCAST :"+arguments[1])
+            print("setchankey: "+arguments[1])
+
+        def setckey_handler():
+            global CKEY_DICT
+            print(arguments[2][:13])
+            if(arguments[2][:13]=="\\b_lib_c_time"):
+                self.CKEY_time=" :\\"+arguments[2][:14]
+            if(arguments[2][:14]=="\\b_lib_c_lobby"):
+                self.CKEY_lobby=" :\\"+arguments[2][:15]
+            if(arguments[2][:13]=="\\b_lib_u_user"):
+                CKEY_DICT[self.nickname+"user"]=" :\\"+arguments[2][14:]
+            if(arguments[2][:15]=="\\b_lib_u_system"):
+                CKEY_DICT[self.nickname+"system"]=" :\\"+arguments[2][16:]
+                #print(CKEY_DICT[self.nickname]["user"])
+
+            #self.reply("MODE " + arguments[0] + " +o " + arguments[0])
+            channel = self.channels[irc_lower(arguments[0])]
+            #self.message(":"+self.prefix+" UTM " + arguments[0] + " :" + arguments[1]  + " :"+arguments[1])
+            #self.message_channel(self.server.channels[irc_lower(arguments[0])],"UTM",arguments[0] + " :" + arguments[1],True)
+            for i in range(0,len(list(channel.members))):
+                print(list(channel.members)[i].nickname)
+                list(channel.members)[i].reply("702 "+ arguments[0]+" "+arguments[0]+" "+arguments[1]+" BCAST :"+arguments[2]) 
+            print(arguments[0])
+
+        def getckey_handler():
+            print(arguments[4])
+            print(arguments[1])
+            #print(self.CKEY)
+            global CKEY_DICT
+            #if(arguments[3]=="\\b_lib_c_lobby"):
+            #     self.reply("704 " + str(self.nickname) + " "  + str(arguments[0]) + " " + str(arguments[1]) + self.CKEY_lobby)
+            #     print("704 " + str(self.nickname) + " "  + str(arguments[0]) + str(arguments[1]) + " :\\b_lib_c_lobby\\MzYwMDA=")
+            #     return
+            #if(arguments[3]=="\\b_lib_c_time"):
+            #     self.reply("704 " + self.nickname + " " + arguments[0] + " " + str(arguments[1]) + self.CKEY_time)
+            #     return
+            #if(arguments[3]=="\\b_lby_wlddata"):
+            #     return
+            if(arguments[4]=="\\b_lib_u_user"):
+                 print("aaaa " +CKEY_DICT[arguments[1]+"user"])
+                 self.reply("702 " + self.nickname + " " + arguments[0] + " " + arguments[1] + " " + str(arguments[2]) + CKEY_DICT[arguments[1]+"user"])
+            if(arguments[4]=="\\b_lib_u_system"):
+                 print("bbbb "+CKEY_DICT[arguments[1]+"system"])
+                 self.reply("702 " + self.nickname + " " + arguments[0] + " " + arguments[1] + " " + str(arguments[2]) + CKEY_DICT[arguments[1]+"system"])
+            #self.reply("704 " + arguments[0] + " "  + arguments[0] + " BCAST :\\b_owned\\"+arguments[1])
+            #self.reply("703 " + arguments[0] + " " + arguments[2]  + " :End of GETCKEY")
+            #self.reply("703 " + self.nickname + " " + arguments[0] + " " + arguments[1] + " " + str(arguments[2]) + " :End of GETCKEY")
+
+        def getchankey_handler():
+	    #print(arguments[3])
+            #print(self.CKEY)
+            global CKEY_wld
+            if(arguments[3]=="\\b_lby_wlddata"):
+                 self.reply("704 " + str(self.nickname) + " "  + str(arguments[0]) + " " + str(arguments[1]) + " :\\b_lby_wlddata\\"+CKEY_wld)
+            if(arguments[3]=="\\b_lib_c_lobby"):
+                 self.reply("704 " + str(self.nickname) + " "  + str(arguments[0]) + " " + str(arguments[1]) + " " + self.channels[irc_lower(arguments[0])].CHANKEY_lobby)
+                 #print("704 " + str(self.nickname) + " "  + str(arguments[0]) + str(arguments[1]) + " :\\b_lib_c_lobby\\MzYwMDA=")
+                 #return
+            if(arguments[3]=="\\b_lib_c_time"):
+                 self.reply("704 " + self.nickname + " " + arguments[0] + " " + str(arguments[1]) + " " +self.channels[irc_lower(arguments[0])].CHANKEY_time)
+                 return
+            #if(arguments[3]=="\\b_lby_wlddata"):
+            #     return
+            #if(arguments[4]=="\\b_lib_u_user"):
+            #     self.reply("704 " + self.nickname + " " + arguments[0] + " " + str(arguments[3]) + CKEY_DICT[arguments[2]+"user"])
+            #if(arguments[4]=="\\b_lib_u_server"):
+            #     self.reply("704 " + self.nickname + " " + arguments[0] + " " + str(arguments[3]) + CKEY_DICT[arguments[2]+"system"])
+            #self.reply("704 " + arguments[0] + " "  + arguments[0] + " BCAST :\\b_owned\\"+arguments[1])
+            #self.reply("703 " + arguments[0] + " " + arguments[1]  + " :End of GETCKEY")
+
+        def utm_handler():
+            print("arg0: "+arguments[0])
+            #print(self.channels[irc_lower(arguments[0])])
+            #self.message(":"+self.nickname+"!DWCUser@"+self.host+" UTM" + " " + arguments[0]+" :"+arguments[1])
+            if(arguments[0][0]!='#'):
+                #self.message("SERVER!SERVER@* NOTICE :" + self.nickname  + " sends a UTM to " + arguments[0]  + ": "+arguments[1])
+                for j in range(0,len(self.channels)):
+                    channel = self.channels[list(self.channels)[j]]
+                    for i in range(0,len(list(channel.members))):
+                        print("a: "+list(channel.members)[i].nickname)
+                        if(list(channel.members)[i].nickname==arguments[0]):
+                            print("aa")
+                            #arg_1,arg_2 = arguments[1].split(";")
+                            str=":"
+                            #self.message_channel(self.server.channels[irc_lower(arguments[0])],"UTM",arguments[0]+" :"+arguments[1],True)
+                            list(channel.members)[i].message(":"+self.prefix+" UTM " + arguments[0]  + " :"+arguments[1])
+                            #list(channel.members)[i].message_channel_as(list(channel.members)[i],channel,"UTM", arguments[0] + " :"+arguments[1])
+                            #list(channel.members)[i].("UTM "+arguments[1])
+                            #[arguments[0]].message("UTM "+arguments[0]+" :"+arguments[1])
+            if(arguments[0][0]=='#'):
+                print(self.server.channels[irc_lower(arguments[0])].name)
+                channel = self.channels[irc_lower(arguments[0])]
+                #self.message(":"+self.prefix+" UTM " + arguments[0] + " :" + arguments[1]  + " :"+arguments[1])
+                #self.message_channel(self.server.channels[irc_lower(arguments[0])],"UTM",arguments[0] + " :" + arguments[1],True)
+                for i in range(0,len(list(channel.members))):
+                    print(list(channel.members)[i].nickname)
+                    #if(list(channel.members)[i].nickname==arguments[0]):
+                    if(True):
+                       print("bb")
+                       #arg_1,arg_2 = arguments[1].split(";")
+                       #str=":"
+                       #self.message_channel(self.server.channels[irc_lower(arguments[0])],"UTM",arguments[0]+" :"+arguments[1],True)
+                       list(channel.members)[i].message(":"+self.prefix+" UTM " + arguments[0] + " :"+arguments[1])
+                       #list(channel.members)[i].message_channel_as(list(channel.members)[i],channel,"UTM", arguments[0] + " :"+arguments[1])
+                       #list(channel.members)[i].("UTM "+arguments[1])
+                       #[arguments[0]].message("UTM "+arguments[0]+" :"+arguments[1])
+
+
         handler_table = {
+            "SETCKEY": setckey_handler,
+            "GETCHANKEY": getchankey_handler,
+            "GETCKEY": getckey_handler,
+            "SETCHANKEY": setchankey_handler,
+            "UTM": utm_handler,
             "AWAY": away_handler,
             "ISON": ison_handler,
             "JOIN": join_handler,
@@ -584,6 +729,7 @@ class Client(object):
         try:
             handler_table[command]()
         except KeyError:
+            print("421 %s %s :Unknown command" % (self.nickname, command))
             self.reply("421 %s %s :Unknown command" % (self.nickname, command))
 
     def socket_readable_notification(self):
@@ -625,7 +771,8 @@ class Client(object):
         self.__writebuffer += msg + "\r\n"
 
     def reply(self, msg):
-        self.message(":%s %s" % (self.server.name, msg))
+        #self.message(":%s %s" % (self.server.name, msg))
+        self.message(":s %s" % (msg))
 
     def reply_403(self, channel):
         self.reply("403 %s %s :No such channel" % (self.nickname, channel))
@@ -636,6 +783,11 @@ class Client(object):
 
     def message_channel(self, channel, command, message, include_self=False):
         line = ":%s %s %s" % (self.prefix, command, message)
+        for client in channel.members:
+            if client != self or include_self:
+                client.message(line)
+    def message_channel_as(self, user, channel, command, message, include_self=False):
+        line = ":%s %s %s" % (user.prefix, command, message)
         for client in channel.members:
             if client != self or include_self:
                 client.message(line)
