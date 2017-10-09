@@ -1,7 +1,0 @@
-#!/bin/sh
-
-set -e
-
-pyflakes miniircd test.py
-pep8 miniircd test.py
-nosetests
