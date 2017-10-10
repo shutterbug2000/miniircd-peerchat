@@ -14,7 +14,7 @@ Limitations
 -----------
 
 * Generic server, some chankeys are copied across games.
-* Not all plaza types show, only Bulbasaur.
+* Mew Plaza is not yet supported as it does not seem to be a Peerchat issue.
 * Time is not resynced across all users; each user starts with 20 minutes, meaning some users disconnect before others.
 
 Usage
