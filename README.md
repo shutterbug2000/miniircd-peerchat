@@ -10,13 +10,6 @@ Features
 --------
 * Pokémon Generation 4 WFC Plaza support.
 
-Limitations
------------
-
-* Generic server, some chankeys are copied across games.
-* Mew Plaza is not yet supported as it does not seem to be a Peerchat issue.
-* Time is not resynced across all users; each user starts with 20 minutes, meaning some users disconnect before others.
-
 Usage
 -----
 
@@ -27,8 +20,8 @@ Then, run aluigi's [peerchat server emulator](http://aluigi.altervista.org/paper
 Requirements
 ------------
 
-Python 2.6 or newer (including the Python 3 series). Get it at
-http://www.python.org.
+Python 3.7, or newer. Get it at <https://www.python.org>.
+Poetry, get it at <https://python-poetry.org/>.
 
 License
 -------
@@ -39,4 +32,5 @@ Credits
 -------
 jrosdahl, for miniircd.
 shutterbug2000, for RE of WFC Plaza, and recoding.
+Mythra, for RE of WFC Plaza, recoding, and modernization.
 pokeacer and larsenv, for testing.
